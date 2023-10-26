@@ -1,0 +1,513 @@
+Machine Learning Assignment
+
+                                   Assignment-01
+
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('Heart.csv')
+df
+
+missing_values = df.isna().sum()
+print('missing values: ',missing_values)
+
+data_shapes=df.shape
+print("Data Shape: ",data_shapes)
+
+dataType = df.dtypes
+print("Data Types of Each Attributes: ",dataType)
+
+zero_counts=(df==0).sum()
+print("Numbers of Zeroes in Each Column: \n",zero_counts)
+
+mean_age=df['Age'].mean()
+print('Mean age of patients: ',mean_age)
+
+x=df[['Age','Chol']].max()
+x
+
+df['AHD'].replace('Yes',1,inplace=True)
+df['AHD'].replace('No',0,inplace=True)
+df
+
+x=df.drop(columns=['SNo','AHD'])
+x
+
+from sklearn.model_selection import train_test_split
+xTrain,xTest,yTrain,yTest = train_test_split(x,y,test_size=0.25,random_state=1)
+xTrain,xTest,yTrain,yTest
+
+cor=df.corr(numeric_only=True)['AHD'].sort_values(ascending=False)
+cor
+
+import matplotlib.pyplot as plt
+y = df['Age']
+x = df['Chol'] 
+colors = ['red' if value == 1 else 'blue' for value in df['AHD']]
+
+plt.scatter(x[df['AHD'] == 0], y[df['AHD'] == 0], c='blue', marker='o', label='No')
+plt.scatter(x[df['AHD'] == 1], y[df['AHD'] == 1], c='red', marker='o', label='Yes')
+plt.title('Age vs. Chol')
+plt.ylabel('Age')
+plt.xlabel('Chol')
+legend = plt.legend()
+plt.show()
+
+
+
+
+
+
+                                        Assignment-02
+
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error,mean_absolute_error,r2_score
+
+df = pd.read_csv("temperatures.csv")
+df
+
+df.shape
+
+# input features
+x= df["ANNUAL"]
+
+p=df.corr()["ANNUAL"].sort_values(ascending=False)
+p
+
+# Highly correlated
+y = df["DEC"]
+
+x=x.values
+y=y.values
+
+
+# 2D array
+x=x.reshape(117,1)
+y=y.reshape(117,1)
+x,y
+
+x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.25,random_state = 1)
+
+# instacnce is created
+model_highly = LinearRegression()
+model_highly.fit(x_train,y_train)
+
+y_pred =  model_highly.predict(x_test)
+y_pred_training = model_highly.predict(x_train)
+
+#actual dp
+plt.scatter(x_test,y_test,color='b') 
+plt.plot(x_test,y_pred,color='orange',linewidth = 1)
+plt.title("ANNUAL vs DEC")
+plt.ylabel("DEC")
+plt.xlabel("ANNAUL Temp")
+plt.show()
+
+# Testing error
+mse = mean_squared_error(y_test, y_pred)
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test , y_pred)
+print(f'MSE:{mse}')
+print(f'MAE:{mae}')
+print(f'R-squared (R2): {r2}')
+
+# training error
+mse = mean_squared_error(y_train,y_pred_training)
+mae = mean_absolute_error(y_train,y_pred_training)
+print(f'MSE: {mse}')
+print(f'MAE: {mae}')
+print(f'R-squared (R2): {r2}')
+
+#Least correlated
+y=df["JUN"]
+y=y.values
+y=y.reshape(117,1)
+y
+
+x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.25,random_state=1)
+
+
+model_least = LinearRegression()
+model_least.fit(x_train,y_train)
+
+
+y_pred = model_least.predict(x_test)
+y_pred_training = model_least.predict(x_train)
+
+plt.scatter(x_test,y_test,color='b')
+plt.plot(x_test,y_pred,color='orange',linewidth = 1)
+plt.title("ANNUAL vs JUN")
+plt.ylabel("JUN")
+plt.xlabel("ANNUAL TEMP")
+plt.show()
+
+#testing error
+mse = mean_squared_error(y_test,y_pred)
+mae = mean_absolute_error(y_test,y_pred)
+r2 = r2_score(y_test,y_pred)
+print(f'MSE: {mse}')
+print(f'MAE: {mae}')
+print(f'R-squared (R2): {r2}')
+
+
+#testing error
+mse = mean_squared_error(y_test,y_pred)
+mae = mean_absolute_error(y_test,y_pred)
+r2 = r2_score(y_test,y_pred)
+print(f'MSE: {mse}')
+print(f'MAE: {mae}')
+print(f'R-squared (R2): {r2}')
+
+#plotting 
+    
+plt.plot(training_percentages, training_errors, label="Training Error (SSE)")
+plt.plot(training_percentages, testing_errors, label="Testing Error (SSE)")
+plt.xlabel("Training Percentage")
+plt.ylabel("SSE")
+plt.legend()
+plt.title("Training and Testing Error vs. Training Percentage")
+plt.show()
+
+
+
+
+
+
+
+                                           Assignment-03
+
+
+import numpy as np 
+import pandas as pd 
+import seaborn as sns
+import matplotlib.pyplot as plt 
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder
+from sklearn.tree import plot_tree
+
+
+data = pd.read_csv("Admission_Predict.csv")
+
+data.head()
+
+# Convert the "Admitted" column to binary (0 or 1)
+data["Chance of Admit "] = data["Chance of Admit "].apply(lambda x: 1 if x > 0.8 else 0)
+data
+
+x=data.drop("Chance of Admit ",axis=1)# in panda axis 1 represent column and axis 0 represent rows
+y=data["Chance of Admit "]
+x
+
+y=y.astype("int")
+
+sns.countplot(x=y)
+
+y.value_counts()
+
+x_train.shape #shape determine the dimension of dataframes
+
+classifier = DecisionTreeClassifier(random_state=0,criterion='entropy')
+classifier.fit(x_train, y_train)
+
+#For Training
+classifier1 = DecisionTreeClassifier(random_state=0)
+classifier1.fit(x_train, y_train)
+
+
+# Evaluate the Model
+y_pred = classifier.predict(x_test)
+y_pred1 = classifier1.predict(x_test)
+
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+result=pd.DataFrame({
+    'actual':y_test,
+    'predicted':y_pred
+})
+
+print(result)
+
+
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+ConfusionMatrixDisplay.from_predictions(y_test,y_pred)
+
+# Display classification report and confusion matrix
+print("Classification Report for entropy:")
+print(classification_report(y_test, y_pred))
+
+print("Classification Report for gini index:")
+print(classification_report(y_test, y_pred1))
+
+# Plot the Decision Tree for testing dataset
+plt.figure(figsize=(25, 15))
+plot_tree(classifier,fontsize=10,filled=True,rounded=True)
+plt.title("Decision Tree with entropy")
+plt.show()
+
+print("")
+
+plt.figure(figsize=(25, 15))
+plot_tree(classifier1,fontsize=10,filled=True,rounded=True)
+plt.title("Decision Tree with gini index")
+plt.show()
+
+#For training dataset
+
+classifier = DecisionTreeClassifier(random_state=0,criterion='entropy')
+classifier.fit(x_train, y_train)
+
+classifier1 = DecisionTreeClassifier(random_state=0)
+classifier1.fit(x_train, y_train)
+
+# Evaluate the Model
+y_pred = classifier.predict(x_train)
+y_pred1 = classifier1.predict(x_train)
+
+
+print("Confusion Matrix:")
+print(confusion_matrix(y_train, y_pred))
+
+result=pd.DataFrame({
+    'actual':y_train,
+    'predicted':y_pred
+})
+result
+
+ConfusionMatrixDisplay.from_predictions(y_train,y_pred)
+
+# Display classification report and confusion matrix
+print("Classification Report for entropy :")
+print(classification_report(y_train, y_pred))
+print("")
+print("Classification Report for gini index:")
+print(classification_report(y_train, y_pred1))
+
+# Plot the Decision Tree
+plt.figure(figsize=(25, 15))
+plot_tree(classifier,fontsize=10,filled=True,rounded=True)
+plt.title("Decision Tree with entropy index")
+plt.show()
+print("")
+plt.figure(figsize=(25, 15))
+plot_tree(classifier1,fontsize=10,filled=True,rounded=True)
+plt.title("Decision Tree with gini  index")
+plt.show()
+
+
+
+
+
+
+                                         Assignment-04
+
+
+
+import pandas as pd
+import numpy as np
+import seaborn as sb
+from sklearn.preprocessing import StandardScaler
+from scipy.cluster.hierarchy import dendrogram, linkage
+from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.metrics import silhouette_score
+from scipy.cluster.hierarchy import dendrogram, linkage
+from sklearn.model_selection import train_test_split
+
+# Load the dataset
+data = pd.read_csv("mall_customers.csv")
+print(data)
+
+x=data.iloc[:,3:]
+
+plt.title("Unclustered Data")
+plt.xlabel("Annual Income")
+plt.ylabel("Spending Score")
+plt.scatter(x["Annual Income (k$)"],x["Spending Score (1-100)"])
+
+
+km=KMeans(n_clusters=3)
+
+km.fit_predict(x)
+
+#Sum Squared error number of clusters increase SSE value decreases
+km.inertia_
+
+sse=[]
+for k in range(1,16):
+    km=KMeans(n_clusters=k)
+    km.fit_predict(x)
+    sse.append(km.inertia_)
+
+
+plt.title("Elbow Method")
+plt.xlabel("Value of x")
+plt.ylabel("SSE")
+plt.plot(range(1,16),sse,marker='.',color="green")
+
+silh=[]
+for k in range(2,16):
+    km=KMeans(n_clusters=k)
+    labels=km.fit_predict(x)
+    score=silhouette_score(x,labels)
+    silh.append(score)
+silh
+
+plt.title("Silhoutte Method")
+plt.xlabel("Value of x")
+plt.ylabel("Silhoutte Score")
+plt.plot(range(2,16),silh,marker='.',color="green")
+
+km=KMeans(n_clusters=5)
+
+labels=km.fit_predict(x)
+labels
+
+plt.title("Unclustered Data")
+plt.xlabel("Annual Income")
+plt.ylabel("Spending Score")
+plt.scatter(x["Annual Income (k$)"],x["Spending Score (1-100)"])
+
+plt.title("Clustered Data")
+plt.xlabel("Annual Income")
+plt.ylabel("Spending Score")
+plt.scatter(x["Annual Income (k$)"],x["Spending Score (1-100)"],c=labels)
+
+data[labels==4]
+
+km.predict([[46,78]])
+
+clusters = km.cluster_centers_
+clusters
+
+agl=AgglomerativeClustering(n_clusters=5)
+alabels=agl.fit_predict(x)
+
+plt.title("Agglomerative")
+plt.xlabel("Annual Income")
+plt.ylabel("Spending Score")
+plt.scatter(x["Annual Income (k$)"],x["Spending Score (1-100)"],c=alabels)
+
+plt.title("KMeans")
+plt.xlabel("Annual Income")
+plt.ylabel("Spending Score")
+plt.scatter(x["Annual Income (k$)"],x["Spending Score (1-100)"],c=labels)
+sb.scatterplot(x=clusters[:,0], y=clusters[:,1],color='red')
+
+# Standardize the features
+scaler = StandardScaler()
+scaled_data = scaler.fit_transform(data[['Annual Income (k$)', 'Spending Score (1-100)']])
+
+# Train-Test Split
+X_train, X_test = train_test_split(scaled_data, test_size=0.2, random_state=42)
+
+# Perform hierarchical clustering
+linkage_matrix = linkage(X_train, method='ward', metric='euclidean')
+
+# Plot the dendrogram
+plt.figure(figsize=(12, 6))
+dendrogram(linkage_matrix)
+plt.title('Dendrogram for Aggometric Hierarchical Clustering')
+plt.xlabel('Sample Index')
+plt.ylabel('Distance')
+plt.show()
+
+
+				Assignment - 05
+
+import pandas as pd
+from mlxtend.frequent_patterns import apriori
+from mlxtend.frequent_patterns import association_rules
+import matplotlib.pyplot as plt
+
+data = pd.read_csv("Market_Basket_Optimisation.csv", header=None)
+data
+
+transactions = []
+for i in range(len(data)):
+    transaction = []
+    for j in range(len(data.columns)):
+        if str(data.values[i, j])!='nan':
+            transaction.append(str(data.values[i, j]))
+    transactions.append(transaction)
+transactions
+            
+
+from mlxtend.preprocessing import TransactionEncoder
+te = TransactionEncoder()
+x = te.fit_transform(transactions)
+
+len(te.columns_)
+
+te.columns_
+
+df = pd.DataFrame(x, columns=te.columns_)
+df
+
+
+freq_itemset = apriori(df, min_support=0.01, use_colnames=True)
+freq_itemset
+
+rules = association_rules(freq_itemset, metric='confidence', min_threshold=0.10)
+
+print("List of Transactions:")
+for i, transaction in enumerate(transactions[:5]):  # Print the first 5 transactions
+    print(f"Transaction {i + 1}: {transaction}")
+
+rules.head(100)
+
+plt.scatter(rules['support'], rules['confidence'], alpha=0.5)
+plt.xlabel('Support')
+plt.ylabel('Confidence')
+plt.title('Support vs. Confidence')
+plt.show()
+
+rules[rules['antecedents'] == {'cake'}]
+
+
+				Assignment-06
+
+import pandas as pd
+from keras.models import Sequential
+from keras.layers import Dense
+
+df=pd.read_csv('pima-indians-diabetes.csv')
+
+df.info
+
+df.columns
+
+X=df.iloc[:,0:-1].values
+
+y=df.iloc[:,8].values
+
+model = Sequential()
+model.add(Dense(12, input_dim=8, activation='relu'))
+model.add(Dense(8, activation='relu'))
+model.add(Dense(1, activation='sigmoid'))
+# compile model
+model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+# fitting of model
+model.fit(X, y, epochs=200, batch_size=10)
+# evaluation
+_, accuracy = model.evaluate(X, y)
+print('Accuracy: %.2f' % (accuracy*100))
+from ann_visualizer.visualize import ann_viz;
+ann_viz(model, title="Artificial Neural Network")
+
+
+
