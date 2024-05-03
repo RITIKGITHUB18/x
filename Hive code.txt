@@ -1,0 +1,612 @@
+***************************************************** Assignment 1 ***************************************************************************************************
+
+
+package WordCount;
+
+import java.io.IOException;
+import java.util.StringTokenizer;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class WordCount {
+
+  public static class TokenizerMapper
+       extends Mapper<Object, Text, Text, IntWritable>{
+
+    private final static IntWritable one = new IntWritable(1);
+    private Text word = new Text();
+
+    public void map(Object key, Text value, Context context
+                    ) throws IOException, InterruptedException {
+                    
+        // logic starts here
+        String[] tokens = value.toString().split(" ");
+                      
+        String ipAddress = tokens[0];
+
+        word.set(ipAddress) ;
+        context.write(word, one) ;
+
+    }
+  }
+
+  public static class IntSumReducer
+       extends Reducer<Text,IntWritable,Text,IntWritable> {
+    private IntWritable result = new IntWritable();
+
+    public void reduce(Text key, Iterable<IntWritable> values,
+                       Context context
+                       ) throws IOException, InterruptedException {
+      int sum = 0;
+      for (IntWritable val : values) {
+        sum += val.get();
+      }
+      result.set(sum);
+      context.write(key, result);
+    }
+  }
+
+  public static void main(String[] args) throws Exception {
+    Configuration conf = new Configuration();
+    Job job = Job.getInstance(conf, "word count");
+    job.setJarByClass(WordCount.class);
+    job.setMapperClass(TokenizerMapper.class);
+    job.setCombinerClass(IntSumReducer.class);
+    job.setReducerClass(IntSumReducer.class);
+    job.setOutputKeyClass(Text.class);
+    job.setOutputValueClass(IntWritable.class);
+    FileInputFormat.addInputPath(job, new Path(args[0]));
+    FileOutputFormat.setOutputPath(job, new Path(args[1]));
+    System.exit(job.waitForCompletion(true) ? 0 : 1);
+  }
+}
+
+pwd 
+ls
+hadoop fs -put Desktop/access_log.txt inputlog.txt
+hadoop fs -ls
+hadoop jar IPProcess IPProcess.IPProcess input.txt op60
+
+hadoop fs -cat op60/part-r-00000
+
+
+
+
+************************************************************************* Hive Hbase ************************************************************************************
+
+create database mydb2;
+
+create table flight(fno int, year int, dest varchar(10), delay float)
+row format delimited
+fields terminated by ','
+lines terminated by '\n'
+stored as filetext;
+
+insert into flight values(123,2004, "Mumbai",30.3);
+
+select * from flight;
+
+go to terminal and open gedit fl.txt
+
+insert data in the format of flight table
+
+>	load data local inpath "fl.txt"
+	overwrite into table flight;
+
+create table nflight(fno int, year int, source varchar(10))
+row format delimited
+fields terminated by ','
+lines terminated by '\n'
+stored as textfile;
+
+performe join operation
+
+insert into nflight values (same fno to the flight table fno, 2008 ,"source name")
+
+select a.fno, a.year, a.name, b.source, a.delay
+from flight a 
+join nflight b
+on (a.fno = b.fno)
+
+
+create index flight_index on table flight(fno)
+as 'org.apache.hadoop.hive.ql.index.compact.CompactIndexhandler'
+WITH DEFERRED REBUILD;
+
+show tables;
+
+create database mydb3;
+
+use mydb3;
+
+create table hive_int(id int,name varchar(10),sal float)
+row format delimited
+fields terminated ','
+lines terminated '\n'
+stored as textfile;
+
+go to terminal and create a file name data.txt with the data in the same format as the hive_int table structure
+
+load data local inpath 'data.txt' into table hive_int;
+
+create external table hive_ext(id int, nme varchar(10), sal float)
+row format delimited
+fields terminated ','
+lines terminated '\n'
+stored as textfile;
+
+insert into hive_ext select * from hive_int;
+
+select * from hive_ext;
+
+
+open new terminal  and write 
+hbase shell
+
+after that create 'table4', 'cf'
+
+come to hive terminal
+
+create external table hive_ext1(id int, name varchar(10), sal float)
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key,cf:name,cf:sal")
+TBLPROPERTIES("hbase.table.name" = "table4");
+
+
+insert into hive_ext1 select * from hive_int;
+
+
+************************************************************ DSBDA Assignment 4 *************************************************************
+
+import pandas as pd
+data = pd.read_csv("fb.csv")
+print(type(data))
+
+data.shape
+
+data.head()
+
+data.iloc[2:10,:]
+data.iloc[2:10,1:5]
+x=data.iloc[2:10,1:5]
+x.shape
+data.iloc[:10,:5]
+data.iloc[12:,10:]
+
+data.iloc[12,:]
+data.iloc[12:18,[2,5,11,14]]
+data.iloc[[2,4,6,7],[2,5,11,14]]
+data.loc[:,'Type']
+data.loc[:,['Type','like','comment']]
+data.loc[100:110,['Type','like','comment']]
+data.iloc[:,6]
+data[['Type','like','comment']]
+data.columns
+data.info
+x=[]
+x.extend(range(2,21))
+x.extend(range(57,374))
+x
+data.iloc[x,:2:16]
+X = data[['Type','Category','comment','like','share']]
+X
+X.shape
+X.head
+Z = X[X['like']>100]
+Z.shape
+Z.head
+Z = X[(X['like']>100) & (X['share']>40)]
+Z.shape
+Z.head
+Z.to_csv('output.csv',index = False)
+Z.to_html('output.html',index = False)
+
+newData = pd.read_csv('newfb.csv')
+newData.shape
+data.shape
+merged = pd.concat([data,newData])
+merged.shape
+Y = data.drop(['Type','comment','Category'],axis=1)
+Y.shape
+Y = data.drop([1,2,3,4,5,6,7,8],axis =0)
+Y.shape
+X.shape
+Z.shape
+Y = Z.T
+Y
+Y.shape
+Y.head()
+Y.melt()
+Z.melt(id_vars='Category')
+Z.melt(id_vars=['Category','Type'])
+Y = pd.get_dummies(Z)
+Y.head()
+
+
+
+************************************************************* Assignment 5 ****************************************
+import pandas as pd
+air = pd.read_csv('airquality.csv')
+air.shape
+air.count()
+air.isnull().sum()
+air.describe()
+air.info()
+A = air.dropna()
+A
+A.isnull().sum()
+A.shape
+A = air.fillna(method='pad')
+import numpy as np
+A = air['Ozone'].replace(np.NaN,air['Ozone'].mean())
+
+A.head()
+from sklearn.impute import SimpleImputer
+imp = SimpleImputer(missing_values=np.nan,strategy='mean')
+A=imp.fit_transform(air)
+# convert A back to the data frame
+A = pd.DataFrame(A,columns=air.columns)
+
+
+from sklearn.model_selection import train_test_split
+len(A)
+train,test = train_test_split(A)
+len(train)
+len(test)
+train.head()
+train ,test = train_test_split(A , test_size=0.20)
+len(test)
+len(train)
+A.describe()
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+B = scaler.fit_transform(A)
+B
+pd.DataFrame(B).describe()
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler()
+B = scaler.fit_transform(A)
+B=pd.DataFrame(B).describe()
+B
+from sklearn.preprocessing import Binarizer
+bin = Binarizer(threshold=0.5)
+B = bin.fit_transform(B)
+pd.DataFrame(B)
+data = pd.read_csv('student.csv')
+data.head()
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+B= le.fit_transform(data['name'])
+B
+B=data[:]
+
+B['name']=le.fit_transform(B['name'])
+
+B
+A
+from sklearn.linear_model import LinearRegression
+X=A['Ozone'].values
+
+X=X.reshape(-1,1)
+X
+Y=A['Temp'].values
+Y
+Y=Y.reshape(-1,1)
+Y
+model=LinearRegression()
+model.score(X,Y)*100
+model.predict([[121]])
+import matplotlib.pyplot as plt
+plt.scatter(X,Y)
+
+
+
+************************************************************ ASSignment - 7******************************************************************************
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+df = pd.read_csv('newfb.csv')
+
+df = df.drop_duplicates()
+df
+
+
+df.isna().sum()
+
+df = df.sort_values(by="like")
+df = df[df['like']<1000]
+
+plt.figure(figsize=(16,10))
+x = df['like']
+y = df['comment']
+plt.xlabel('First Value')
+plt.ylabel('Second Value')
+plt.plot(x, y, color = 'blue', marker = 'o', mfc = 'red',ls = '-', ms = 7)
+plt.show()
+
+
+type_likes = df.groupby('Type')['like'].sum()
+x = type_likes.index
+y = type_likes.values
+
+plt.title('Student Enrollment', fontsize=20)
+plt.bar(x, y, color='black', width=0.3, edgecolor='red', linewidth=3, ls=':', alpha=0.5)
+plt.grid()
+plt.show()
+
+
+plt.figure(figsize=(16,9))
+
+plt.subplot(2,4,1)
+plt.subplot(2,4,2)
+plt.subplot(2,4,3)
+plt.subplot(2,4,4)
+
+
+
+x = df['like']
+y = df['share']
+plt.scatter(x,y)
+
+
+
+post_type_counts = df['Type'].value_counts()
+post_type_counts
+
+
+
+
+
+
+
+plt.figure(figsize=(7,7))
+plt.pie(post_type_counts, labels=post_type_counts.index, autopct='%1.1f%%', startangle=0, radius=0.6)
+plt.title('Pie Chart: Distribution of Post Types')
+plt.show()
+
+
+plt.boxplot(df["comment"])
+
+# 1. Bar Plot: Types of Posts vs Total Interactions
+plt.figure(figsize=(10, 6))
+sns.barplot(x='Type', y='Total Interactions', data=df)
+plt.xlabel('Post Type')
+plt.ylabel('Total Interactions')
+plt.title('Bar Plot: Types of Posts vs Total Interactions')
+plt.show()
+
+
+# 2. Line Plot: Post Month vs Lifetime Post Total Reach
+plt.figure(figsize=(10, 6))
+sns.lineplot(x='Post Month', y='Lifetime Post Total Reach', data=df)
+plt.xlabel('Post Month')
+plt.ylabel('Lifetime Post Total Reach')
+plt.title('Line Plot: Post Month vs Lifetime Post Total Reach')
+plt.show()
+
+
+# 3. Scatter Plot: Lifetime Post Consumers vs Lifetime Post Total Impressions
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x='Lifetime Post Consumers', y='Lifetime Post Total Impressions', data=df)
+plt.xlabel('Lifetime Post Consumers')
+plt.ylabel('Lifetime Post Total Impressions')
+plt.title('Scatter Plot: Lifetime Post Consumers vs Lifetime Post Total Impressions')
+plt.show()
+
+
+# 4. Box Plot: Post Weekday vs Lifetime Engaged Users
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='Post Weekday', y='Lifetime Engaged Users', data=df)
+plt.xlabel('Post Weekday')
+plt.ylabel('Lifetime Engaged Users')
+plt.title('Box Plot: Post Weekday vs Lifetime Engaged Users')
+plt.show()
+
+# 5. Histogram: Post Hour Distribution
+plt.figure(figsize=(8, 6))
+plt.hist(df['Post Hour'], bins=24, edgecolor='black')
+plt.xlabel('Post Hour')
+plt.ylabel('Frequency')
+plt.title('Histogram: Post Hour Distribution')
+plt.show()
+
+# 6. KDE Plot: Distribution of Lifetime Post Consumptions by Paid status
+plt.figure(figsize=(8, 6))
+# Utilizes the "Paid" column to color the KDE plot, thus differentiating between paid and unpaid posts.
+sns.kdeplot(data=df, x='Lifetime Post Consumptions', hue='Paid', fill=True)
+plt.xlabel('Lifetime Post Consumptions')
+plt.ylabel('Density')
+plt.title('KDE Plot: Distribution of Lifetime Post Consumptions by Paid status')
+plt.legend(title='Paid', labels=['Paid', 'Unpaid'], loc='upper right')
+plt.show()
+
+# 7. Pair Plot: Pairwise relationships with scatter plots and histograms
+sns.pairplot(df[['Lifetime Post Total Reach', 'Lifetime Post Total Impressions', 'Lifetime Engaged Users', 'Lifetime Post Consumers', 'Lifetime Post Consumptions']])
+plt.suptitle('Pair Plot: Pairwise Relationships', y=1.02)
+plt.show()
+
+# 8. Heatmap: Correlation between numerical attributes
+plt.figure(figsize=(10, 8))
+sns.heatmap(df[['Lifetime Post Total Reach', 'Lifetime Post Total Impressions', 'Lifetime Engaged Users', 'Lifetime Post Consumers', 'Lifetime Post Consumptions', 'Total Interactions']].corr(), annot=True, cmap='coolwarm')
+plt.title('Heatmap: Correlation between Numerical Attributes')
+plt.show()
+
+
+# Create a violin plot with hue based on Type and split by Paid status
+plt.figure(figsize=(12, 8))
+sns.violinplot(x='Type', y='Total Interactions', hue='Paid', data=df, split=True, inner='quart')
+plt.xlabel('Post Type')
+plt.ylabel('Total Interactions')
+plt.title('Violin Plot: Total Interactions by Post Type and Paid Status')
+plt.legend(title='Paid', loc='upper right')
+plt.show()
+
+************************************************************ ASSignment - 9******************************************************************************
+
+# Import packages
+import requests
+import pandas as pd
+from bs4 import BeautifulSoup
+from datetime import datetime
+
+
+# Header to set the requests as a browser requests
+'''
+These headers are used to mimic a browser request. This is a common 
+practice in web scraping to prevent websites from blocking your requests.
+'''
+headers = {
+    'authority': 'www.amazon.com',
+    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+    'accept-language': 'en-US,en;q=0.9,bn;q=0.8',
+    'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="102", "Google Chrome";v="102"',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'
+}
+
+# url of The amazon Review page
+reviews_url = 'https://www.amazon.com/Legendary-Whitetails-Journeyman-Jacket-Tarmac/product-reviews/B013KW38RQ/'
+
+# number of pages to scrape.
+len_page = 4
+
+
+
+# This function retrieves the HTML data from multiple pages of 
+# Amazon reviews.
+
+# Extra Data as Html object from amazon Review page
+def reviewsHtml(url, len_page):
+    
+    # Empty List define to store all pages html data
+    soups = []
+    
+    # Loop for gather all 3000 reviews from 300 pages via range
+    for page_no in range(1, len_page + 1):
+        
+        # parameter set as page no to the requests body
+        params = {
+            'ie': 'UTF8',
+            'reviewerType': 'all_reviews',
+            'filterByStar': 'critical',
+            'pageNumber': page_no,
+        }
+        
+        # Request make for each page
+        response = requests.get(url, headers=headers)
+        
+        # Save Html object by using BeautifulSoup4 and lxml parser
+        soup = BeautifulSoup(response.text, 'lxml')
+        
+        # Add single Html page data in master soups list
+        soups.append(soup)
+        
+    return soups
+
+
+
+
+
+
+# This function extracts relevant information from the HTML data of each review.
+# Grab Reviews name, description, date, stars, title from HTML
+def getReviews(html_data):
+
+    # Create Empty list to Hold all data
+    data_dicts = []
+    
+    # Select all Reviews BOX html using css selector
+    boxes = html_data.select('div[data-hook="review"]')
+    
+    # Iterate all Reviews BOX 
+    for box in boxes:
+        
+        # Select Name using css selector and cleaning text using strip()
+        # If Value is empty define value with 'N/A' for all.
+        try:
+            name = box.select_one('[class="a-profile-name"]').text.strip()
+        except Exception as e:
+            name = 'N/A'
+
+        try:
+            stars = box.select_one('[data-hook="review-star-rating"]').text.strip().split(' out')[0]
+        except Exception as e:
+            stars = 'N/A'   
+
+        try:
+            title = box.select_one('[data-hook="review-title"]').text.strip()
+        except Exception as e:
+            title = 'N/A'
+
+        try:
+            # Convert date str to dd/mm/yyy format
+            datetime_str = box.select_one('[data-hook="review-date"]').text.strip().split(' on ')[-1]
+            date = datetime.strptime(datetime_str, '%B %d, %Y').strftime("%d/%m/%Y")
+        except Exception as e:
+            date = 'N/A'
+
+        try:
+            description = box.select_one('[data-hook="review-body"]').text.strip()
+        except Exception as e:
+            description = 'N/A'
+
+        # create Dictionary with al review data 
+        data_dict = {
+            'Name' : name,
+            'Stars' : stars,
+            'Title' : title,
+            'Date' : date,
+            'Description' : description
+        }
+
+        # Add Dictionary in master empty List
+        data_dicts.append(data_dict)
+    
+    return data_dicts
+
+
+
+
+
+
+
+
+# Grab all HTML
+html_datas = reviewsHtml(reviews_url, len_page)
+
+# Empty List to Hold all reviews data
+reviews = []
+
+
+# Iterate all Html page 
+for html_data in html_datas:
+    
+    # Grab review data
+    review = getReviews(html_data)
+    
+    # add review data in reviews empty list
+    reviews += review
+
+
+
+
+
+
+# Create a dataframe with reviews Data
+df_reviews = pd.DataFrame(reviews)
+
+df_reviews
+
+
+# Save data
+df_reviews.to_csv('reviews.csv', index=False)
